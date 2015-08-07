@@ -12,14 +12,14 @@ function service(){
   // check openlayers is available on service instantiation
   // this can be handled with Require later on
   if (!ol) return {};
-
+console.log(789)
   var map = {}, //convenience reference
     defaults = {
-      zoom: 15,
-      startLocation: [0,40],
+      zoom: 12,
+ startLocation: [7.3442457442483,47.2553496968727],
       extractStylesKml: false,
       popupOffset: [0,0],
-      featurePropertiesMap: ['name', 'description', 'address', 'phoneNumber', 'styleUrl'],
+      featurePropertiesMap: ['name'],
       onFeatureSelected: function(feature) { console.log("feature selected", feature);}
     },
     zIndex = 9999, 
@@ -313,6 +313,7 @@ function service(){
   
   function init(config){
     var config = angular.extend(defaults, config);
+    console.log(123)
 
     createMyZoomToExtentControl();
     
@@ -320,9 +321,9 @@ function service(){
     map = new ol.Map({
       target: 'map',
       layers: [
-        new ol.layer.Tile({
-          source: new ol.source.MapQuest({layer: 'osm'})
-        })
+        //new ol.layer.Tile({
+        //  source: new ol.source.MapQuest({layer: 'osm'})
+        //})
       ],
       view: new ol.View({
         center: ol.proj.transform(config.startLocation, 'EPSG:4326', 'EPSG:3857'),
@@ -335,8 +336,10 @@ function service(){
     });
     
     popupSetup();
-    loadKML();
-    zoomToExtent();
+    //loadKML();
+    GeoJsonLoad();
+    //zoomToExtent();
+    return map;
   }
 
   function createMyZoomToExtentControl(){
@@ -419,7 +422,9 @@ function service(){
     var kmlSource = new ol.source.KML({
         projection: 'EPSG:3857',
         url: kml,
-        extractStyles: defaults.extractStylesKml
+//         extractStyles: defaults.extractStylesKml
+        extractStyles: true
+
     });
     
     var vectorLayer = new ol.layer.Vector({
@@ -449,8 +454,120 @@ function service(){
     map.addLayer(vectorLayer);
     
     //render custom markers
-    renderSVGFeatures();
+    // renderSVGFeatures();
   }
+
+
+
+  function GeoJsonLoad(){
+    var data = [
+    './data/ambulance_np6_01.json',
+    './data/ambulance_nomlocal.json',
+    './data/ambulance_lieudit.json',
+    './data/ambulance_lieucommunes.json',
+    './data/ambulance_rueplace.json',
+    './data/ambulance_batiments.json',
+    ];
+
+    data.forEach(function(dataUrl){
+      console.log(dataUrl)
+      var vectorLayer = new ol.layer.Vector({
+        source: new ol.source.Vector({
+          url: dataUrl,
+          format: new ol.format.GeoJSON(),
+          style: styleFunction
+        })
+      });
+      // Add vectory layer to map
+      map.addLayer(vectorLayer);
+    })
+    map.getLayers().item(5).setVisible(false);
+
+    map.on('moveend',function(){
+      console.log(map.getView().getZoom());
+      if (map.getView().getZoom() > 18 ){
+        map.getLayers().item(5).setVisible(true);
+      }else{
+        map.getLayers().item(5).setVisible(false);
+      }
+    })
+
+
+    var image = new ol.style.Circle({
+      radius: 5,
+      fill: null,
+      stroke: new ol.style.Stroke({color: 'red', width: 1})
+    });
+            var Geostyles = {
+              'Point': [new ol.style.Style({
+                image: image
+              })],
+        'LineString': [new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: 'green',
+            width: 1
+          })
+        })],
+        'MultiLineString': [new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: 'green',
+            width: 1
+          })
+        })],
+        'MultiPoint': [new ol.style.Style({
+          image: image
+        })],
+        'MultiPolygon': [new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: 'yellow',
+            width: 1
+          }),
+          fill: new ol.style.Fill({
+            color: 'rgba(255, 255, 0, 0.1)'
+          })
+        })],
+        'Polygon': [new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: 'blue',
+            lineDash: [4],
+            width: 3
+          }),
+          fill: new ol.style.Fill({
+            color: 'rgba(0, 0, 255, 0.1)'
+          })
+        })],
+        'GeometryCollection': [new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: 'magenta',
+            width: 2
+          }),
+          fill: new ol.style.Fill({
+            color: 'magenta'
+          }),
+          image: new ol.style.Circle({
+            radius: 10,
+            fill: null,
+            stroke: new ol.style.Stroke({
+              color: 'magenta'
+            })
+          })
+        })],
+        'Circle': [new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: 'red',
+            width: 2
+          }),
+          fill: new ol.style.Fill({
+            color: 'rgba(255,0,0,0.2)'
+          })
+        })]
+            };
+
+    function styleFunction (feature, resolution) {
+      return Geostyles[feature.getGeometry().getType()];
+    }
+  }
+
 }
 
 

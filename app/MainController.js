@@ -11,17 +11,18 @@ angular
 Controller.$inject = [
     'mapService', 
     '$timeout', 
-    '$rootScope'
+    '$rootScope',
+    '$scope'
 ];
 
-function Controller(mapService, $timeout, $rootScope) {
+function Controller(mapService, $timeout, $rootScope, $scope) {
   var vm = this;
 
   // map initialisation
-  mapService.init({
+  $scope.map = mapService.init({
       extractStylesKml: false,
       popupOffset: [-4,-43],
-      featurePropertiesMap: ['name', 'description'], //override default mapping
+      featurePropertiesMap: ['name'], //override default mapping
       onFeatureSelected: onFeatureSelected //override default event handler
   });
 
