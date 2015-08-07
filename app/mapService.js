@@ -494,6 +494,23 @@ console.log(789)
 
     function styleFunction (feature, resolution) {
 
+      function getTextStyle() {
+        if (feature.getProperties()) {
+          var properties = feature.getProperties();
+          if (properties.numero) {
+            return new ol.style.Text({
+              text: feature.getProperties().numero,
+              fill: new ol.style.Fill({color: 'black'})
+            })
+          } else if (properties.texte) {
+            return new ol.style.Text({
+              text: feature.getProperties().texte,
+              fill: new ol.style.Fill({color: 'black'})
+            })
+          }
+        }
+      }
+
       var image = new ol.style.Circle({
         radius: 5,
         fill: null,
@@ -507,8 +524,10 @@ console.log(789)
           stroke: new ol.style.Stroke({
             color: 'red',
             width: 1
-          })
-        })],
+          }),
+          text: getTextStyle()
+        })
+        ],
         'MultiLineString': [new ol.style.Style({
           stroke: new ol.style.Stroke({
             color: 'red',
@@ -535,7 +554,8 @@ console.log(789)
           }),
           fill: new ol.style.Fill({
             color: 'rgba(0, 0, 255, 0.1)'
-          })
+          }),
+          text: getTextStyle()
         })],
         'GeometryCollection': [new ol.style.Style({
           stroke: new ol.style.Stroke({
