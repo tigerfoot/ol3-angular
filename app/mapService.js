@@ -16,7 +16,7 @@ console.log(789)
   var map = {}, //convenience reference
     defaults = {
       zoom: 12,
- startLocation: [7.3442457442483,47.2553496968727],
+      startLocation: [7.3442457442483,47.2553496968727],
       extractStylesKml: false,
       popupOffset: [0,0],
       featurePropertiesMap: ['name'],
@@ -25,6 +25,7 @@ console.log(789)
     zIndex = 9999, 
     popup, 
     selectedFeature,
+    searchFeatures = [],
     myZoomToExtentControl;
   
   // public API
@@ -34,7 +35,8 @@ console.log(789)
     getFeatures: getFeatures,
     selectFeature: selectFeature,
     hideFeatures: hideFeatures,
-    unselectFeature: unselectFeature
+    unselectFeature: unselectFeature,
+    searchFeatures: searchFeatures
   };
   
   return ms;
@@ -313,7 +315,6 @@ console.log(789)
   
   function init(config){
     var config = angular.extend(defaults, config);
-    console.log(123)
 
     createMyZoomToExtentControl();
     
@@ -398,65 +399,26 @@ console.log(789)
         bounds = ol.extent.extend(bounds, ext);
       });
             
-		if (bounds) {
-		  // increase bounds using a tenth of the 
-			// maximum distance between coordinates
-			var incX = Math.abs(bounds[2] - bounds[0]);
-			var incY = Math.abs(bounds[3] - bounds[1]);
-			var buffer = (incX>incY)? incX: incY;
-			var bounds10 = ol.extent.createEmpty();
-			ol.extent.buffer(bounds, buffer/5, bounds10);
-			
-			var animation = ol.animation.pan({
-				easing: eval(ol.easing.inAndOut),
-				source: map.getView().getCenter()
-			});
-			map.beforeRender(animation);
-			
-			map.getView().fitExtent(bounds10, map.getSize());
-		}	  
-	};
-  
-  function loadKML(){
-    var kml = './moutier.kml';
-    var kmlSource = new ol.source.KML({
-        projection: 'EPSG:3857',
-        url: kml,
-//         extractStyles: defaults.extractStylesKml
-        extractStyles: true
+    if (bounds) {
+      // increase bounds using a tenth of the
+      // maximum distance between coordinates
+      var incX = Math.abs(bounds[2] - bounds[0]);
+      var incY = Math.abs(bounds[3] - bounds[1]);
+      var buffer = (incX>incY)? incX: incY;
+      var bounds10 = ol.extent.createEmpty();
+      ol.extent.buffer(bounds, buffer/5, bounds10);
 
-    });
-    
-    var vectorLayer = new ol.layer.Vector({
-        source: kmlSource,
-        style: kmlStyle
-    });
-    
-    function kmlStyle(feature, resolution){
-      // use default styles if using kml icons
-      if (!defaults.extractStylesKml) return [];
-      
-      return [new ol.style.Style({
-        image: new ol.style.Circle({
-          radius: 5,
-          fill: new ol.style.Fill({
-            color: 'rgba(123, 152, 188, 0)'
-          }),
-          stroke: new ol.style.Stroke({
-            color: 'rgba(123, 152, 188, 0)',
-            width: 1
-          })
-        })
-      })];
+      var animation = ol.animation.pan({
+              easing: eval(ol.easing.inAndOut),
+              source: map.getView().getCenter()
+      });
+      map.beforeRender(animation);
+
+      map.getView().setZoom(12);
+      map.getView().setCenter(ol.proj.transform(defaults.startLocation, 'EPSG:4326', 'EPSG:3857'));
     }
-    
-    // Add vectory layer to map
-    map.addLayer(vectorLayer);
-    
-    //render custom markers
-    // renderSVGFeatures();
-  }
-
+};
+  
 
 
   function GeoJsonLoad(){
@@ -480,7 +442,28 @@ console.log(789)
       });
       // Add vectory layer to map
       map.addLayer(vectorLayer);
+      vectorLayer.getSource().on('change', function(evt) {
+        var source = evt.target;
+        // important for async.
+        if (source.getState() === 'ready') {
+          source.getFeatures().forEach(function(feature){
+            var searchText = [];
+            var properties = feature.getProperties();
+            for (name in properties ){
+              if (properties.hasOwnProperty(name) && name !== 'geometry'){
+                searchText.push(properties[name].toString());
+              }
+            }
+            searchFeatures.push({
+              feature: feature,
+              searchText: searchText.join(', ')
+            })
+          });
+
+        }
+      });
     })
+
     map.getLayers().item(1).setVisible(false);
 
     map.on('moveend',function(){
@@ -491,6 +474,7 @@ console.log(789)
         map.getLayers().item(1).setVisible(false);
       }
     })
+
 
     function styleFunction (feature, resolution) {
 
