@@ -461,10 +461,10 @@ console.log(789)
 
   function GeoJsonLoad(){
     var data = [
-    './data/ambulance_np6_01.json',
-    './data/ambulance_nomlocal.json',
-    './data/ambulance_lieudit.json',
-    './data/ambulance_lieucommunes.json',
+//     './data/ambulance_np6_01.json',
+//     './data/ambulance_nomlocal.json',
+//     './data/ambulance_lieudit.json',
+//     './data/ambulance_lieucommunes.json',
     './data/ambulance_rueplace.json',
     './data/ambulance_batiments.json',
     ];
@@ -475,42 +475,43 @@ console.log(789)
         source: new ol.source.Vector({
           url: dataUrl,
           format: new ol.format.GeoJSON(),
-          style: styleFunction
-        })
+        }),
+        style: styleFunction
       });
       // Add vectory layer to map
       map.addLayer(vectorLayer);
     })
-    map.getLayers().item(5).setVisible(false);
+    map.getLayers().item(1).setVisible(false);
 
     map.on('moveend',function(){
       console.log(map.getView().getZoom());
-      if (map.getView().getZoom() > 18 ){
-        map.getLayers().item(5).setVisible(true);
+      if (map.getView().getZoom() >= 18 ){
+        map.getLayers().item(1).setVisible(true);
       }else{
-        map.getLayers().item(5).setVisible(false);
+        map.getLayers().item(1).setVisible(false);
       }
     })
 
+    function styleFunction (feature, resolution) {
 
-    var image = new ol.style.Circle({
-      radius: 5,
-      fill: null,
-      stroke: new ol.style.Stroke({color: 'red', width: 1})
-    });
-            var Geostyles = {
-              'Point': [new ol.style.Style({
-                image: image
-              })],
+      var image = new ol.style.Circle({
+        radius: 5,
+        fill: null,
+        stroke: new ol.style.Stroke({color: 'red', width: 1})
+      });
+      var Geostyles = {
+        'Point': [new ol.style.Style({
+          image: image
+        })],
         'LineString': [new ol.style.Style({
           stroke: new ol.style.Stroke({
-            color: 'green',
+            color: 'red',
             width: 1
           })
         })],
         'MultiLineString': [new ol.style.Style({
           stroke: new ol.style.Stroke({
-            color: 'green',
+            color: 'red',
             width: 1
           })
         })],
@@ -561,10 +562,10 @@ console.log(789)
             color: 'rgba(255,0,0,0.2)'
           })
         })]
-            };
+              };
 
-    function styleFunction (feature, resolution) {
       return Geostyles[feature.getGeometry().getType()];
+
     }
   }
 
