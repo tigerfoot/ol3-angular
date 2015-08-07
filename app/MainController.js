@@ -32,6 +32,21 @@ function Controller(mapService, $timeout, $rootScope, $scope) {
   vm.hideFeatures = hideFeatures;
   vm.cancelSearch = cancelSearch;
 
+  vm.search = '';
+  vm.searchResults = [];
+
+  vm.find = function (){
+      vm.searchResults = [];
+      console.log(vm.search);
+      if (mapService.searchFeatures.length > 0){
+        mapService.searchFeatures.forEach(function(feature){
+          if (feature.searchText.toLowerCase().indexOf(vm.search.toLowerCase()) > -1){
+            vm.searchResults.push(feature);
+          }
+        });
+      }
+      console.log(vm.searchResults.length);
+  };
 
   ///////////////////////////////////////////////////////////
   // map to view interactions
@@ -74,8 +89,13 @@ function Controller(mapService, $timeout, $rootScope, $scope) {
    *
    * @param {String} id - feature id 
    */
-  function selectFeature(id){
-    mapService.selectFeature(id, true);
+  function selectFeature(feature){
+    // mapService.selectFeature(feature, true);
+    var coord = feature.getGeometry().getFirstCoordinate();
+    console.log(coord);
+    $scope.map.getView().setCenter(coord);
+    $scope.map.getView().setZoom(19);
+
   }  
   
   /**

@@ -12,7 +12,7 @@ function service(){
   // check openlayers is available on service instantiation
   // this can be handled with Require later on
   if (!ol) return {};
-console.log(789)
+
   var map = {}, //convenience reference
     defaults = {
       zoom: 12,
@@ -423,16 +423,16 @@ console.log(789)
 
   function GeoJsonLoad(){
     var data = [
-//     './data/ambulance_np6_01.json',
-//     './data/ambulance_nomlocal.json',
-//     './data/ambulance_lieudit.json',
-//     './data/ambulance_lieucommunes.json',
+    './data/ambulance_np6_01.json',
+    './data/ambulance_nomlocal.json',
+    './data/ambulance_lieudit.json',
+    './data/ambulance_lieucommunes.json',
     './data/ambulance_rueplace.json',
     './data/ambulance_batiments.json',
     ];
 
     data.forEach(function(dataUrl){
-      console.log(dataUrl)
+
       var vectorLayer = new ol.layer.Vector({
         source: new ol.source.Vector({
           url: dataUrl,
@@ -440,12 +440,26 @@ console.log(789)
         }),
         style: styleFunction
       });
+
       // Add vectory layer to map
       map.addLayer(vectorLayer);
+
       vectorLayer.getSource().on('change', function(evt) {
         var source = evt.target;
         // important for async.
         if (source.getState() === 'ready') {
+
+          if (dataUrl == './data/ambulance_batiments.json'){
+            vectorLayer.setVisible(false);
+            map.on('moveend',function(){
+              if (map.getView().getZoom() >= 18 ){
+                vectorLayer.setVisible(true);
+              }else{
+                vectorLayer.setVisible(false);
+              }
+            });
+          }
+
           source.getFeatures().forEach(function(feature){
             var searchText = [];
             var properties = feature.getProperties();
@@ -461,20 +475,9 @@ console.log(789)
           });
 
         }
+
       });
-    })
-
-    map.getLayers().item(1).setVisible(false);
-
-    map.on('moveend',function(){
-      console.log(map.getView().getZoom());
-      if (map.getView().getZoom() >= 18 ){
-        map.getLayers().item(1).setVisible(true);
-      }else{
-        map.getLayers().item(1).setVisible(false);
-      }
-    })
-
+    });
 
     function styleFunction (feature, resolution) {
 
