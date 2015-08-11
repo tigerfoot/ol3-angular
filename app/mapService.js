@@ -20,7 +20,6 @@ function service(){
       extractStylesKml: false,
       popupOffset: [0,0],
       featurePropertiesMap: ['name'],
-      onFeatureSelected: function(feature) { console.log("feature selected", feature);}
     },
     zIndex = 9999, 
     popup, 
@@ -33,9 +32,6 @@ function service(){
     map: map, // ol.Map
     init: init,
     getFeatures: getFeatures,
-    selectFeature: selectFeature,
-    hideFeatures: hideFeatures,
-    unselectFeature: unselectFeature,
     searchFeatures: searchFeatures
   };
   
@@ -73,245 +69,7 @@ function service(){
       zoomToExtent();
   }
   
-  function selectFeature(name, pan){
-    var feature;
-    if (!name) return;
-    var target = $("#map path[feature='" + escape(name) + "']")[0];
-    
-    //search for feature
-    olMapFeatures()
-      .forEach(function(item, i) {
-        var f = item.get('name');
-        if (name==f)
-          feature = item;
-      });
-    selectedFeature = feature;
-    
-    if (feature) {
-      unselectFeature();
-      target.setAttribute("class", "icon selected");
-      
-      //put on top
-      $(target.parentNode.parentNode)
-        .parent().parent()
-        .css('z-index', ++zIndex);
-    }
 
-    //display feature details and pan
-    if (pan && feature) {
-      onFeatureSelected(feature);
-      panToFeature(feature, map.getView().getZoom());
-    
-      var element = angular.element('#popup');
-      $(element).popover('destroy');
-      //show popup for feature or hide any previous one
-      if (feature) {
-        setTimeout(function(){
-          var coord = feature.getGeometry().getCoordinates();
-          var title = feature.get('name');
-          popup.setPosition(coord);
-          $(element).popover({
-            'title': title, 
-            'placement': 'top',
-            'animation': false,
-            'html': true
-            //'content': feature.get('description')
-          });
-          $(element).popover('show'); 
-        }, 1000);
-      }
-    }
-    return feature;
-  }
-
-  function hideFeatures(features, search){
-    //hide any popups
-    var element = angular.element('#popup');
-    $(element).popover('destroy');
-    	  
-    if (!features || features.length===0) {
-      if (search && search.length>0)
-        //search with no results: filters all
-         $("#map path.icon").hide();
-      else
-        //reset after having results
-         $("#map path.icon").show();
-      return;
-    }
-
-	  features.forEach(function(item){
-	    $("#map path[feature!='" + escape(item) + "'].icon").hide();
-	  });
-	  features.forEach(function(item){
-	    $("#map path[feature='" + escape(item) + "'].icon").show();
-	  });
-  }
-  
-
-  
-  function mapFeatureProperties(feature, olFeature) {
-    if (!olFeature) return feature;
-    if (!feature) feature = {};
-    defaults.featurePropertiesMap.forEach(function(key){
-        feature[key] = olFeature.get(key);
-    });
-    return feature;
-  }
-  
-  function onFeatureSelected(olFeature) {
-    if (!olFeature) return;
-    var feature = mapFeatureProperties({}, olFeature);
-    if(defaults.onFeatureSelected)
-      defaults.onFeatureSelected(feature);
-  }
-  
-
-  
-  // Creates an overlays in the given coordinates
-  function createSVGOverlay(position, feature) {
-      if (defaults.extractStylesKml) return;
-      
-      var elem = document.createElement('div');
-      var svg = angular.element('#svgmarker ng-md-icon').clone();
-
-      //change path attributes
-      var path = svg.find('path');
-      path.attr('class', 'icon');
-      path.attr('filter', 'url(#blur)');
-      path.attr('feature', escape(feature.get('name')) );
-      
-      var filter = document.createElement('filter');
-      var fe = document.createElement('feGaussianBlur');
-      filter.setAttribute('id', 'blur');
-      fe.setAttribute('stdDeviation', 3);
-      filter.appendChild(fe);
-      svg.find('svg')[0].appendChild(filter);
-      
-      elem.appendChild(svg[0]);
-      
-      return new ol.Overlay({
-        offset: [-2, 12],
-        element: elem,
-        position: position,
-        positioning: 'bottom-center',
-        stopEvent: false,
-      });
-  }
-  
-  function renderSVGFeatures(){
-    if (defaults.extractStylesKml) return;
-    
-    //wait till directive renders svg element
-    setTimeout(function() {
-      olMapFeatures()
-        .forEach(function(item, i, arr){
-          var hidden = item.get('hidden');
-          if (!hidden) {
-            var coordinates = item.getGeometry().getCoordinates();
-            var overlay = createSVGOverlay(coordinates, item);
-            map.addOverlay(overlay);
-          }
-        });      
-    }, 0);
-  }
-  
-  function popupSetup() {
-    var element = angular.element('#popup');
-    
-    // Add popup showing the position the user clicked
-    popup = new ol.Overlay({
-      element: element,
-      stopEvent: true,
-			offset: defaults.popupOffset
-    });
-    map.addOverlay(popup);
-    
-    var displayPopup = function(evt){
-      var element = popup.getElement();
-      var coordinate = evt.coordinate;
-      var hdms = ol.coordinate.toStringHDMS(ol.proj.transform(
-          coordinate, 'EPSG:3857', 'EPSG:4326'));
-    
-      $(element).popover('destroy');
-      popup.setPosition(coordinate);
-      // the keys are quoted to prevent renaming in ADVANCED mode.
-      $(element).popover({
-        'placement': 'top',
-        'animation': false,
-        'html': true,
-        'content': '<p>The location you clicked was:</p><code>' + hdms + '</code>'
-      });
-      $(element).popover('show');
-    }
-    
-		// display popup on click
-		map.on('click', function(evt) {
-		  if (defaults.extractStylesKml) {
-		    // Regular rendered feature find on click coordinates
-  			var feature = map.forEachFeatureAtPixel(evt.pixel,
-  				function(feature, layer) {
-  					return feature;
-  			});
-		  } else {
-        // SVG marker. Search at element attributes
-  		  if (!feature && evt.originalEvent.target && evt.originalEvent.target.nodeName == "path") {
-          var target = evt.originalEvent.target;
-          var featureId = unescape(target.getAttribute('feature'));
-          feature = selectFeature(featureId, false);
-  		  };
-		  };
-		  
-		  //trigger onFeatureSelected event
-		  selectedFeature = feature;
-		  onFeatureSelected(feature);
-			
-			$(element).popover('destroy');
-			//show popup for feature or hide any previous one
-			if (feature) {
-				
-				setTimeout(function(){
-					var coord = feature.getGeometry().getCoordinates();
-  				popup.setPosition(coord);
-  				var title = feature.get('name');
-  				$(element).popover({
-  				  'title': title, 
-  				  'placement': 'top',
-            'animation': false,
-            'html': true
-  				  //'content': feature.get('description')
-  				});
-  				$(element).popover('show');			  
-				}, 1000);
-			}
-			
-			if (feature) {
-			  panToFeature(feature, map.getView().getZoom());
-			} 
-		});
-		
-  }
-  
-  function panToFeature(feature, zoom) {
-		var lonLat = feature.getGeometry().getCoordinates()
-		
-		var olPixel = map.getPixelFromCoordinate(lonLat);
-		olPixel[1] -= 40;
-		lonLat = map.getCoordinateFromPixel(olPixel);
-		
-		if (map.getView().getZoom() < zoom) 
-			map.getView().setZoom(zoom);
-		
-		var animation = ol.animation.pan({
-		  duration: 1000,
-			easing: eval(ol.easing.inAndOut),
-			source: map.getView().getCenter()
-		});
-			
-		// Add animation to the render pipeline
-		map.beforeRender(animation);
-		// Change center location
-		map.getView().setCenter(lonLat);
-	};
   
   function init(config){
     var config = angular.extend(defaults, config);
@@ -336,10 +94,7 @@ function service(){
 			])
     });
     
-    popupSetup();
-    //loadKML();
     GeoJsonLoad();
-    //zoomToExtent();
     return map;
   }
 
