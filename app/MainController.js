@@ -9,13 +9,14 @@ angular
   .controller('mainController', Controller);
 
 Controller.$inject = [
-    'mapService', 
+    'mapService',
+    'geolocationService',
     '$timeout', 
     '$rootScope',
     '$scope'
 ];
 
-function Controller(mapService, $timeout, $rootScope, $scope) {
+function Controller(mapService, geolocationService, $timeout, $rootScope, $scope) {
   var vm = this;
 
   // map initialisation
@@ -24,6 +25,8 @@ function Controller(mapService, $timeout, $rootScope, $scope) {
       popupOffset: [-4,-43],
       featurePropertiesMap: ['name'], //override default mapping
   });
+
+  geolocationService.init($scope.map);
 
   vm.staticTabs = { search: true, details: false };
   vm.features = mapService.getFeatures();
@@ -43,6 +46,7 @@ function Controller(mapService, $timeout, $rootScope, $scope) {
         });
       }
   };
+
 
 
   // subscribe to event
@@ -71,6 +75,10 @@ function Controller(mapService, $timeout, $rootScope, $scope) {
     vm.searchResults = [];
     vm.feature = undefined;
   };
+
+  vm.geolocate = function (){
+    geolocationService.setTracking();
+  }
 }
 
 })();

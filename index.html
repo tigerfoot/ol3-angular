@@ -27,6 +27,7 @@
   <script src="app/app.js"></script>
   <script src="app/MainController.js"></script>
   <script src="app/mapService.js"></script>
+  <script src="app/geolocationService.js"></script>
   <script src="app/highlightFilter.js"></script>
   <script src="app/multipleFilter.js"></script>
   <link href="assets/css/style.css" rel="stylesheet" />
@@ -38,6 +39,7 @@
 <!-- See http://turfjs.org/static/docs/ -->
 <body ng-controller="mainController as mc">
   <div class="row-fluid">
+    <tabset class="tabset"><button title="Where am I" ng-click="mc.geolocate()">Find Me</button></tabset>
     <tabset class="tabset">
       <div><a class="pull-right vcenter" ng-show="mc.search.length>0" ng-click="mc.cancelSearch()">Cancel Search</a></div>
       <tab active="mc.staticTabs.search">
