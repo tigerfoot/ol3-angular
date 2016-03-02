@@ -206,13 +206,14 @@ function service(){
 
           if (dataUrl == './data/ambulance_batiments.json'){
             vectorLayer.setVisible(false);
-            map.on('moveend',function(){
+             map.on('postrender',function(){
               if (map.getView().getZoom() >= 18 ){
                 vectorLayer.setVisible(true);
               }else{
                 vectorLayer.setVisible(false);
               }
-            });
+//               console.log("postrender ",map.getView().getZoom());
+             });
           }
 
           source.getFeatures().forEach(function(feature){

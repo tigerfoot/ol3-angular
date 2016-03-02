@@ -12,8 +12,8 @@
   <script src="vendor/bootstrap.min.js"></script>
   
   <!-- OpenLayers -->
-  <script src="vendor/ol-debug.js"></script>
-  <!-- <script src="vendor/ol.min.js"></script> -->
+  <!--<script src="vendor/ol-debug.js"></script>-->
+  <script src="vendor/ol.min.js"></script>
   <link rel="stylesheet" href="vendor/ol.css" />
 
   <script src="vendor/turf.min.js"></script>
@@ -38,11 +38,41 @@
 </head>
 <!-- See http://turfjs.org/static/docs/ -->
 <body ng-controller="mainController as mc">
+<nav id="atop" class="navbar navbar-default topnav" role="navigation">
+<div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+        <span class="sr-only">Menu</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="./index.html" title="">
+          <img id="main-logo" src="./images/header.png" class="img-responsive hidden-xs hidden-sm hidden-md" alt="logo" />
+          <img id="main-logo" src="./images/header-xs.png" class="img-responsive visible-xs visible-sm visible-md" alt="logo" />
+      </a>
+    </div>
+    <!-- MENU -->
+    <div class="navbar-collapse collapse navbar-right">
+        <ul class="nav navbar-nav">
+                <li><a href="geolocation"><i class="fa fa-sort-alpha-desc"></i></a></li>
+                <li><a href="page2.html"><i class="fa fa-anchor"></i></a></li>
+                <li><a href="page3.html"><i class="fa fa-user"></i></a></li>
+                <li><a href="page4.html"><i class="fa fa-magic"></i></a></li>
+                <li><a href="page5.html"><i class="fa fa-camera"></i></a></li>
+        </ul>
+    </div>
+</div>
+</nav>
   <div class="row-fluid">
-    <tabset class="tabset"><button title="Where am I" ng-click="mc.geolocate()">Find Me</button></tabset>
-    <tabset class="tabset">
-      <div><a class="pull-right vcenter" ng-show="mc.search.length>0" ng-click="mc.cancelSearch()">Cancel Search</a></div>
+   <tabset class="tabset">
+      <tab><div>Géolocalisation</div>
+      <div><a class="pull-right vcenter" ng-click="mc.geolocate()">Locate me</a></div>
+      </tab>
+
+     <div><a class="pull-right vcenter" ng-show="mc.search.length>0" ng-click="mc.cancelSearch()">Cancel Search</a></div>
       <tab active="mc.staticTabs.search">
+        <div><a class="pull-right vcenter" ng-show="mc.search.length>0" ng-click="mc.cancelSearch()">Cancel Search</a></div>
         <div class="search-tab">
         <div class="input-group">
           <span class="input-group-addon"><ng-md-icon icon="search" style="fill: #000;" size="18"></ng-md-icon></span>
@@ -64,6 +94,7 @@
       </tab>
     </tabset>
   </div>
-<div id="map"></div>
+  <div id="map"></div>
+  <div id="info"></div>
 </body>
 </html>
